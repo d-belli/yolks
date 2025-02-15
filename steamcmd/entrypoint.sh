@@ -43,7 +43,7 @@ if [ -f "/usr/local/bin/proton" ]; then
 		export PATH=$PATH:/root/.local/bin
 	else
 		echo -e "----------------------------------------------------------------------------------"
-		echo -e "WARNING!!! Proton needs variable SRCDS_APPID, else it will not work. Please add it"
+		echo -e "WARNING!!! SRCDS_APPID is missing and must be set when using Proton"
 		echo -e "Server will now terminate"
 		echo -e "----------------------------------------------------------------------------------"
 		exit 1
@@ -55,9 +55,10 @@ cd /home/container || { echo "Failed to switch to the container's working direct
 
 # Set default values for steam if not provided
 STEAM_USER=${STEAM_USER:-anonymous}
-STEAM_PASS=${STEAM_PASS:-""}
-STEAM_AUTH=${STEAM_AUTH:-""}
-#UPDATE_STEAMWORKS=${UPDATE_STEAMWORKS:-"0"}
+if [ "${STEAM_USER}" == "anonymous" ]; then
+	STEAM_PASS=""
+	STEAM_AUTH=""
+fi
 
 
 ## If AUTO_UPDATE is not set or is set to 1, run steamcmd to update the server
@@ -67,10 +68,8 @@ if [ -z "${AUTO_UPDATE}" ] || [ "${AUTO_UPDATE}" == "1" ]; then
 			./steamcmd/steamcmd.sh +force_install_dir /home/container \
 			 +login "${STEAM_USER}" "${STEAM_PASS}" "${STEAM_AUTH}" \
 			 $([[ "${WINDOWS_INSTALL}" == "1" ]] && printf %s '+@sSteamCmdForcePlatformType windows') \
-			 +app_update "${SRCDS_APPID}" \
-			 $([[ -z ${SRCDS_BETAID} ]] || printf %s "-beta ${SRCDS_BETAID}") $([[ -z ${SRCDS_BETAPASS} ]] || printf %s "-betapassword ${SRCDS_BETAPASS}") \
 			 $([[ -z ${HLDS_GAME} ]] || printf %s "+app_set_config 90 mod ${HLDS_GAME}") \
-			 ${INSTALL_FLAGS} \
+			 "+app_update ${SRCDS_APPID} $([[ -z ${SRCDS_BETAID} ]] || printf %s "-beta ${SRCDS_BETAID}") $([[ -z ${SRCDS_BETAPASS} ]] || printf %s "-betapassword ${SRCDS_BETAPASS}") ${INSTALL_FLAGS}  $( [[ "${VALIDATE}" == "1" ]] && printf %s 'validate' )" \
 			 $([[ "${UPDATE_STEAMWORKS}" == "1" ]] && printf %s '+app_update 1007') \
 			 +quit
 	fi
