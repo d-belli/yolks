@@ -29,7 +29,7 @@ sleep 1
 TZ=${TZ:-UTC}
 export TZ
 
-# Set environment variable that holds the Internal Docker IP of this container
+# Set environment variable that holds the Internal Docker IP
 INTERNAL_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
 export INTERNAL_IP
 
@@ -51,7 +51,7 @@ if [ -f "/usr/local/bin/proton" ]; then
 fi
 
 # Switch to the container's working directory
-cd /home/container || { echo "Failed to switch to the container's working directory!" ; exit 1; }
+cd /home/container || exit 1
 
 # Set default values for steam if not provided
 STEAM_USER=${STEAM_USER:-anonymous}
@@ -60,18 +60,13 @@ if [ "${STEAM_USER}" == "anonymous" ]; then
 	STEAM_AUTH=""
 fi
 
-
 ## If AUTO_UPDATE is not set or is set to 1, run steamcmd to update the server
 if [ -z "${AUTO_UPDATE}" ] || [ "${AUTO_UPDATE}" == "1" ]; then
 	if [ -n "${SRCDS_APPID}" ]; then
-			# shellcheck disable=SC2046,SC2086
-			./steamcmd/steamcmd.sh +force_install_dir /home/container \
-			 +login "${STEAM_USER}" "${STEAM_PASS}" "${STEAM_AUTH}" \
-			 $([[ "${WINDOWS_INSTALL}" == "1" ]] && printf %s '+@sSteamCmdForcePlatformType windows') \
-			 $([[ -z ${HLDS_GAME} ]] || printf %s "+app_set_config 90 mod ${HLDS_GAME}") \
-			 "+app_update ${SRCDS_APPID} $([[ -z ${SRCDS_BETAID} ]] || printf %s "-beta ${SRCDS_BETAID}") $([[ -z ${SRCDS_BETAPASS} ]] || printf %s "-betapassword ${SRCDS_BETAPASS}") ${INSTALL_FLAGS}  $( [[ "${VALIDATE}" == "1" ]] && printf %s 'validate' )" \
-			 $([[ "${UPDATE_STEAMWORKS}" == "1" ]] && printf %s '+app_update 1007') \
-			 +quit
+		# shellcheck disable=SC2046,SC2086
+		echo ./steamcmd/steamcmd.sh +force_install_dir /home/container \
+			+login "${STEAM_USER}" "${STEAM_PASS}" "${STEAM_AUTH}" \
+			$([[ "${WINDOWS_INSTALL}" == "1" ]] && printf %s '+@sSteamCmdForcePlatformType windows') $([[ -z ${HLDS_GAME} ]] || printf %s "+app_set_config 90 mod ${HLDS_GAME}") "+app_update ${SRCDS_APPID} $([[ -z ${SRCDS_BETAID} ]] || printf %s "-beta ${SRCDS_BETAID}") $([[ -z ${SRCDS_BETAPASS} ]] || printf %s "-betapassword ${SRCDS_BETAPASS}") ${INSTALL_FLAGS}  $([[ "${VALIDATE}" == "1" ]] && printf %s 'validate')" $([[ "${UPDATE_STEAMWORKS}" == "1" ]] && printf %s '+app_update 1007') +quit
 	fi
 fi
 
